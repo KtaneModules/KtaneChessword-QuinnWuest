@@ -106,7 +106,7 @@ public class ChesswordScript : MonoBehaviour
         if (_moduleSolved || _isAnimating)
             return false;
         Audio.PlaySoundAtTransform("Check", transform);
-        if (_letterBoard[_currentPosition] == '.')
+        if (_letterBoard[_currentPosition] == '.' || !_hasPlaced)
         {
             Module.HandleStrike();
             Debug.LogFormat("[Chessword #{0}] Pressed the star button when the knight was not on a letter. Strike.", _moduleId);
@@ -431,5 +431,145 @@ public class ChesswordScript : MonoBehaviour
         _isAnimating = false;
         _hasPlaced = false;
         _input = "";
+    }
+
+#pragma warning disable 0414
+    private readonly string TwitchHelpMessage = "!{0} a1 b2 c3 [Press cells a1, b2, c3.] | !{0} star [Press the star button.] | !{0} reset [Press the reset button.] | Commands can be chained.";
+#pragma warning restore 0414
+
+    private IEnumerator ProcessTwitchCommand(string command)
+    {
+        var parameters = command.ToUpperInvariant().Split(' ');
+        var list = new List<KMSelectable>();
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i] == "RESET")
+                list.Add(ResetBtnSel);
+            else if (parameters[i] == "STAR")
+                list.Add(StarBtnSel);
+            else
+            {
+                if (parameters[i].Length != 2)
+                {
+                    yield return "sendtochaterror " + parameters[i] + " is not a valid command!";
+                    yield break;
+                }
+                if (parameters[i][0] >= 'A' && parameters[i][0] <= 'F' && parameters[i][1] >= '1' && parameters[i][1] <= '6')
+                    list.Add(SquareSels[parameters[i][0] - 'A' + ((parameters[i][1] - '1') * 6)]);
+                else
+                {
+                    yield return "sendtochaterror " + parameters[i] + " is not a valid command!";
+                    yield break;
+                }
+            }
+        }
+        yield return null;
+        yield return "solve";
+        yield return "strike";
+        for (int i = 0; i < list.Count; i++)
+        {
+            list[i].OnInteract();
+            yield return new WaitForSeconds(0.2f);
+            if (_isAnimating)
+                yield break;
+        }
+    }
+
+    private IEnumerator TwitchHandleForcedSolve()
+    {
+        int start = 0;
+        for (int i = 0; i < _input.Length; i++)
+        {
+            if (_input[i] == _solutionWord[i])
+                start++;
+            else
+            {
+                ResetBtnSel.OnInteract();
+                start = 0;
+                i = _input.Length;
+                yield return new WaitForSeconds(0.2f);
+            }
+        }
+        if (!_hasPlaced)
+        {
+            SquareSels[_letterBoard.IndexOf(_solutionWord[0])].OnInteract();
+            yield return new WaitForSeconds(0.2f);
+            StarBtnSel.OnInteract();
+            start = 1;
+            yield return new WaitForSeconds(0.2f);
+        }
+        for (int i = start; i < _solutionWord.Length; i++)
+        {
+            var goal = _letterBoard.IndexOf(_solutionWord[i]);
+            if (goal == -1)
+                throw new NotImplementedException("You fucked up");
+            var path = FindPath(_currentPosition, goal);
+            for (int j = 0; j < path.Length; j++)
+            {
+                SquareSels[path[j]].OnInteract();
+                yield return new WaitForSeconds(0.2f);
+            }
+            StarBtnSel.OnInteract();
+            yield return new WaitForSeconds(0.2f);
+        }
+        while (!_moduleSolved)
+            yield return true;
+    }
+
+    struct QueueItem
+    {
+        public int Cell;
+        public int Parent;
+        public QueueItem(int cell, int parent)
+        {
+            Cell = cell;
+            Parent = parent;
+        }
+    }
+
+    private int[] FindPath(int a, int b)
+    {
+        var visited = new Dictionary<int, QueueItem>();
+        var q = new Queue<QueueItem>();
+        var current = a;
+        var sol = b;
+        q.Enqueue(new QueueItem(current, -1));
+        while (q.Count > 0)
+        {
+            var qi = q.Dequeue();
+            if (visited.ContainsKey(qi.Cell))
+                continue;
+            visited[qi.Cell] = qi;
+            if (qi.Cell == sol)
+                break;
+            if (qi.Cell % 6 > 0 && qi.Cell / 6 > 1)
+                q.Enqueue(new QueueItem(qi.Cell - 13, qi.Cell));
+            if (qi.Cell % 6 > 1 && qi.Cell / 6 > 0)
+                q.Enqueue(new QueueItem(qi.Cell - 8, qi.Cell));
+            if (qi.Cell % 6 > 0 && qi.Cell / 6 < 4)
+                q.Enqueue(new QueueItem(qi.Cell + 11, qi.Cell));
+            if (qi.Cell % 6 > 1 && qi.Cell / 6 < 5)
+                q.Enqueue(new QueueItem(qi.Cell + 4, qi.Cell));
+            if (qi.Cell % 6 < 5 && qi.Cell / 6 > 1)
+                q.Enqueue(new QueueItem(qi.Cell - 11, qi.Cell));
+            if (qi.Cell % 6 < 4 && qi.Cell / 6 > 0)
+                q.Enqueue(new QueueItem(qi.Cell - 4, qi.Cell));
+            if (qi.Cell % 6 < 5 && qi.Cell / 6 < 4)
+                q.Enqueue(new QueueItem(qi.Cell + 13, qi.Cell));
+            if (qi.Cell % 6 < 4 && qi.Cell / 6 < 5)
+                q.Enqueue(new QueueItem(qi.Cell + 8, qi.Cell));
+        }
+        var r = sol;
+        var path = new List<int>();
+        while (true)
+        {
+            var nr = visited[r];
+            if (nr.Parent == -1)
+                break;
+            path.Add(nr.Cell);
+            r = nr.Parent;
+        }
+        path.Reverse();
+        return path.ToArray();
     }
 }
