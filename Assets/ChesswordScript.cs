@@ -74,7 +74,7 @@ public class ChesswordScript : MonoBehaviour
     {
         return delegate ()
         {
-            SquareSels[btn].AddInteractionPunch(0.2f);
+            SquareSels[btn].AddInteractionPunch(0.1f);
             if (_moduleSolved || _isAnimating)
                 return false;
             if (!_hasPlaced)
