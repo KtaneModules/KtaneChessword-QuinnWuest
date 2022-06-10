@@ -43,7 +43,7 @@ public class ChesswordScript : MonoBehaviour
     {
         new string[]{ "ARTS", "APPS", "BOAT", "BRAT", "CODE", "EGGS", "ECHO", "FAUX", "FOOL", "FREE", "GLEE", "ISLE", "KING", "LOAF", "LOVE", "LAMB", "MIKE", "MINI", "NADA", "NINE", "PILE", "POLL", "QUIZ", "RAID", "ROAD", "RIND", "SUMS", "SANS", "TREE", "THEY", "TANG", "TRAP", "VICE", "WAVE", "YANK", "ZOOS" },
         new string[]{ "ANGST", "AGONY", "ALBUM", "BRINE", "BENDS", "CRACK", "CHOKE", "DRUMS", "FIRED", "GROAN", "GRAPE", "HOUSE", "INFIX", "KARMA", "LUNGS", "LINKS", "MARES", "MORSE", "NEEDY", "OPERA", "PILOT", "PINGS", "PRESS", "PLANE", "QUEST", "REIGN", "SAUCE", "SOILS", "STAMP", "TANGO", "TARTS", "UNDER", "WOMAN", "WHERE", "YODEL" },
-        new string[]{ "AGENTS", "BRAWNY", "CRYING", "DETAIL", "ENDING", "FAILED", "GHOULS", "HAMMER", "INDIGO", "JUMPER", "KAZOOS", "LOVERS", "MORGUE", "NATURE", "OCTAVE", "PEANUT", "QUOTAS", "REEKED", "SUMMON", "TRAVEL", "UNEVEN", "VICTOR", "WISHED", "YAWNED", "ZEALOT" }
+        new string[]{ "AGENTS", "BRAWNY", "CRYING", "DETAIL", "ENDING", "FAILED", "GHOULS", "HAMMER", "INDIGO", "JUMPER", "KEVLAR", "LOVERS", "MORGUE", "NATURE", "OCTAVE", "PEANUT", "QUARTZ", "REWARD", "SUMMON", "TRAVEL", "UNEVEN", "VICTOR", "WISHED", "YAWNED", "ZEALOT" }
     };
 
     private enum ChessPiece
@@ -135,9 +135,9 @@ public class ChesswordScript : MonoBehaviour
         int attempts = 0;
         _pieceCount = Rnd.Range(4, 7);
         var possibleWords =
-            _pieceCount == 4 ? Enumerable.Range(0, _wordList[0].Length).ToArray().Shuffle().Take(6).Select(i => _wordList[0][i]).ToArray() :
-            _pieceCount == 5 ? Enumerable.Range(0, _wordList[1].Length).ToArray().Shuffle().Take(6).Select(i => _wordList[1][i]).ToArray() :
-            Enumerable.Range(0, _wordList[2].Length).ToArray().Shuffle().Take(6).Select(i => _wordList[2][i]).ToArray();
+            _pieceCount == 4 ? Enumerable.Range(0, _wordList[0].Length).ToArray().Shuffle().Take(4).Select(i => _wordList[0][i]).ToArray() :
+            _pieceCount == 5 ? Enumerable.Range(0, _wordList[1].Length).ToArray().Shuffle().Take(4).Select(i => _wordList[1][i]).ToArray() :
+            Enumerable.Range(0, _wordList[2].Length).ToArray().Shuffle().Take(5).Select(i => _wordList[2][i]).ToArray();
         tryAgain:
         attempts++;
         _pieceLetters = new List<char>[_pieceCount].Select(i => new List<char>()).ToArray();
@@ -180,6 +180,7 @@ public class ChesswordScript : MonoBehaviour
         Debug.LogFormat("[Chessword #{0}] Pieces: {1}.", _moduleId, list.Join(", "));
         Debug.LogFormat("[Chessword #{0}] The letters for each piece: {1}.", _moduleId, list2.Join(", "));
         Debug.LogFormat("[Chessword #{0}] The solution word is {1}.", _moduleId, _solutionWord);
+        Debug.LogFormat("<Chessword #{0}> Attempts to generate a valid board, with words {1}: {2}.", _moduleId, possibleWords.Join(" "), attempts);
     }
 
     private string GetCoord(int num)
