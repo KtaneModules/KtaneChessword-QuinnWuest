@@ -25,7 +25,7 @@ public class ChesswordScript : MonoBehaviour
     private static int _moduleIdCounter = 1;
     private bool _moduleSolved;
 
-    private static readonly string[] _possibleLetterBoards = new string[2] { "WG.JORHBEZI.MF.QDTP.AKL..XS.VYU.C.N.", "B.DQ.FPY.CX..IU.ZWLONKVT.HA.J.S.RGME" };
+    private static readonly string[] _possibleLetterBoards = new string[2] { "WG.JORHBEZI.MF.QDTP.AKL.XS.VY.U.C.N.", "B.DQ.FPY.CX..IU.ZWLONKVT.HA.J.S.RGME" };
     private string _letterBoard;
     private int _lastDigit;
     private int _pieceCount;
@@ -94,6 +94,7 @@ public class ChesswordScript : MonoBehaviour
             }
             Audio.PlaySoundAtTransform("KnightMove", transform);
             KnightObjs[_currentPosition].SetActive(false);
+            Debug.LogFormat("[Chessword #{0}] Moved the knight from {1} to {2}.", _moduleId, GetCoord(_currentPosition), GetCoord(btn));
             _currentPosition = btn;
             KnightObjs[_currentPosition].SetActive(true);
             return false;
